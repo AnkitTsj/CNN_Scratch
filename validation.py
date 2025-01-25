@@ -1,6 +1,6 @@
 import torch
 
-def validate_forward(model, input_tensor):
+def validate_forward(model, input_tensor,device):
     """
     Validate the forward pass by comparing custom forward output with PyTorch's autograd-backed output.
     """
@@ -22,7 +22,7 @@ def validate_forward(model, input_tensor):
         print(f"PyTorch Output: {pytorch_output}")
 
 
-def validate_backward(model, input_tensor, target_tensor, criterion):
+def validate_backward(model, input_tensor, target_tensor,loss_module,device = "cpu"):
     """
     Validate the backward pass by comparing custom gradients with PyTorch's autograd gradients.
     """
@@ -35,7 +35,7 @@ def validate_backward(model, input_tensor, target_tensor, criterion):
 
     # Custom backward pass
     custom_output = model(input_tensor)
-    loss_module = Loss(criterion)
+
     custom_loss = loss_module.forward(custom_output, target_tensor)
     custom_loss.backward()  # PyTorch autograd gradient calculation
 
@@ -63,7 +63,7 @@ def validate_backward(model, input_tensor, target_tensor, criterion):
         print("Backward pass validation: FAILED!")
 
 
-def train_with_optimizer(model, train_loader, criterion, num_epochs=5):
+def train_with_optimizer(model, train_loader,loss_module, num_epochs=5,device = "cpu"):
     """
     Train the model using PyTorch's optimizer and validate custom forward and backward methods.
     """
@@ -79,10 +79,9 @@ def train_with_optimizer(model, train_loader, criterion, num_epochs=5):
 
             # Forward pass using custom method
             outputs = model(inputs)
-
+            # print(outputs[0])
             # Compute loss and gradients using custom methods
-            loss_module = Loss(criterion)
-            loss = loss_module.forward(outputs, labels)
+            loss = loss_module.forward(outputs[0], labels)
             loss.backward()  # Autograd-based backward pass
 
             optimizer.step()  # Update weights
