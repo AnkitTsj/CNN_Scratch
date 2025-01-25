@@ -95,8 +95,8 @@ class sigmoid(nn.Module):
 
 # Custom 2D Convolution layer with Adam-like optimization
 class Conv2d(nn.Module):
-    def __init__(self, in_channels=1, out_channels=1, kernel_size=3, stride=1, padding=0, bias=False, lr=0.001,
-                 beta1=0.9, beta2=0.999, epsilon=1e-4,device= "cpu"):
+    def __init__(self, in_channels=1, out_channels=1, kernel_size=3,device= "cpu", stride=1, padding=0, bias=False, lr=0.001,
+                 beta1=0.9, beta2=0.999, epsilon=1e-4):
         super().__init__()
         # Layer configuration parameters
         self.kernel_size = kernel_size
@@ -140,7 +140,7 @@ class Conv2d(nn.Module):
         out_w = (W - self.kernel_size) // self.stride + 1
         x_unfolded = x_padded.unfold(2, self.kernel_size, self.stride).unfold(3, self.kernel_size, self.stride)
         x_unfolded = x_unfolded.contiguous().view(B, C, out_h * out_w, self.kernel_size, self.kernel_size)
-        x_unfolded = x_unfolded.permute(0, 2, 1, 3, 4).unsqueeze(1)
+        x_unfolded = x_unfolded.permute(0, 2, 1, 3, 4).unsqueeze(1).to(x.device)
 
         filters = self.filters.unsqueeze(0).unsqueeze(2)
         output = (x_unfolded * filters).sum(dim=[3, 4, 5])
@@ -276,7 +276,7 @@ class Pool2d(nn.Module):
 
 # Fully Connected layer with Adam-like optimization
 class FC(nn.Module):
-    def __init__(self, batch_size, out_channels, units, bias=False, lr=0.001, beta1=0.9, beta2=0.999, epsilon=1e-4,device = "cpu"):
+    def __init__(self, batch_size, out_channels, units, device,bias=False, lr=0.001, beta1=0.9, beta2=0.999, epsilon=1e-4):
         super().__init__()
         # Layer configuration parameters
         self.out_channels = out_channels
@@ -304,7 +304,7 @@ class FC(nn.Module):
             self.v_bias = torch.zeros_like(self.bias).uniform_(-1e-3, 1e-3)
         else:
             self.if_bias = False
-            self.bias = torch.zeros((units, 1)).uniform_(-1e-3, 1e-3)
+            self.bias = torch.zeros((units, 1)).uniform_(-1e-3, 1e-3).to(device)
             self.m_bias = None
             self.v_bias = None
 
@@ -510,4 +510,3 @@ def backward(criterion, output, target, layers, loss_type, loss_module):
     del grads
 
     return loss
-
