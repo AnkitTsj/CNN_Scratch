@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-
+from cnn import Softmax
 
 # Custom loss computation module
 class Loss(nn.Module):
@@ -12,7 +12,7 @@ class Loss(nn.Module):
         self.loss = None
         self.loss_fxn = loss_fxn
 
-    def forward(self, output, target,if_softmax = True):
+    def forward(self, output, target,if_softmax = False):
         """
         Compute the loss and store the input and target for backward computation.
         """
@@ -86,4 +86,3 @@ def backward(criterion, output, target, layers, loss_type, loss_module):
     del grads
 
     return loss
-
