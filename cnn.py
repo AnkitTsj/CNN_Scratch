@@ -96,7 +96,7 @@ class sigmoid(nn.Module):
 # Custom 2D Convolution layer with Adam-like optimization
 class Conv2d(nn.Module):
     def __init__(self, in_channels=1, out_channels=1, kernel_size=3, stride=1, padding=0, bias=False, lr=0.001,
-                 beta1=0.9, beta2=0.999, epsilon=1e-4):
+                 beta1=0.9, beta2=0.999, epsilon=1e-4,device= "cpu"):
         super().__init__()
         # Layer configuration parameters
         self.kernel_size = kernel_size
@@ -276,7 +276,7 @@ class Pool2d(nn.Module):
 
 # Fully Connected layer with Adam-like optimization
 class FC(nn.Module):
-    def __init__(self, batch_size, out_channels, units, bias=False, lr=0.001, beta1=0.9, beta2=0.999, epsilon=1e-4):
+    def __init__(self, batch_size, out_channels, units, bias=False, lr=0.001, beta1=0.9, beta2=0.999, epsilon=1e-4,device = "cpu"):
         super().__init__()
         # Layer configuration parameters
         self.out_channels = out_channels
