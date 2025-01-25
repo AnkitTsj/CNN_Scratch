@@ -40,13 +40,9 @@ optimization features.
   - `validate_backward`: Compares custom gradients with PyTorch autograd gradients.
   - `train_with_optimizer`: Trains the model using PyTorch’s optimizer with custom methods.
 
-### 4. `train.py`
+### 4. `train.ipynb`
 - Handles the overall training process, including dataset loading, model initialization, and training loop.
 
-### 5. `utils.py`
-- Utility functions for loading data, plotting loss curves, and managing device configurations.
-
----
 
 ## Setup and Installation
 
@@ -57,32 +53,68 @@ optimization features.
 - numpy 
 - matplotlib
 
-### Steps to Install
-1. Clone this repository:
+### Steps to Use
+### **1. Clone this repository:
    ```bash
    git clone https://github.com/AnkitTsj/CNN_Scratch.git
    cd your_working_dir
    ```
 
 
-2. Run the training script:
-   ```bash
-   python run.ipynb
-   ```
-##OR simply open the run.ipynb on colab as provided and run the cells to try it very simple.
+2. simply open the run.ipynb on colab as provided and run the cells to try it very simple.
 ---
-
-## How to Use
-
-### **1. Validate Forward Propagation**
-To ensure the correctness of the custom forward pass:
+## or write the script as described--
+### **1: Import the modules and create a model:
 ```python
-from validation import validate_forward
+from cnn import *
+from loss import *
+from validation import *
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torchvision import datasets, transforms
+from torch.utils.data import DataLoader
 
-sample_input = torch.randn(4, 3, 32, 32).to(device)  # Replace dimensions as per your network
-validate_forward(model, sample_input)
+transform = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+])
+
+data_dir = "./data"
+train_dataset = datasets.CIFAR10(root=data_dir, train=True, transform=transform, download=True)
+train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
+class CNN(nn.Module):
+    def __init__(self,batch_size,device):
+        super(CNN, self).__init__()
+        self.conv1 = Conv2d(3, 16, kernel_size=3, stride=1, padding=1,device = device)
+        # conv_params = {'kernel_size': 3, 'stride': 1, 'padding': 1, 'out_channels': 16}
+        conv_shape = calculate_output_shape((3,32,32),"conv",layer_params={'kernel_size':3,'stride':1,'padding':1,'out_channels':16})
+        self.relu = ReLU()
+        self.pool = Pool2d(kernel_size=2, stride=2,pool = "max")
+        pool_shape = calculate_output_shape(conv_shape,"maxpool",layer_params={'kernel_size':2,'stride':2,'padding':0})
+        self.fc1 = FC(batch_size,pool_shape[0]* pool_shape[1] * pool_shape[2], 10,device = device)
+        self.softmax = Softmax()
+        self.layers = nn.ModuleList([self.conv1, self.relu, self.pool, self.fc1,self.softmax][::-1])
+
+    def forward(self, x):
+        x = (x - x.mean()) / (x.std() + 1e-5)  # explicit normalization
+        x,_ = self.conv1.custom_forward(x)
+        x = self.relu.custom_forward(x)
+        x = self.pool.custom_forward(x)
+        x = self.fc1.custom_forward(x)
+        x  = self.softmax.custom_forward(x,dim = -1)
+        return x,self.layers
+
+
+model = CNN(batch_size=8,device = device)
+criterion = nn.CrossEntropyLoss()
+loss_module = Loss(criterion)
+optimizer = optim.Adam(model.parameters(), lr=0.001)
 ```
-
 ### **2. Validate Backward Propagation**
 To compare custom backward gradients with PyTorch autograd:
 ```python
